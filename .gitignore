@@ -4,3 +4,4 @@
 .env
 credentials.json
 token.json
+.claude/settings.local.json
