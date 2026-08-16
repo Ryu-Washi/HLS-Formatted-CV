@@ -78,7 +78,8 @@ This is **not a software project** — there is no source code, build system, li
 ## Repository structure
 
 - `Brand CI update/` — the brand system. `hlsbridge_brand-handbook_v3.pdf` is the full spec (colors, type, logo rules, voice/tone); `qa_guideline/page-1.png` and `page-2.png` are a two-page quick-reference (which logo file to use, colors, do/don't). The rest of the folder is the actual logo asset files (PNG + matching vector PDF per variant).
-- `Sample CV/` — raw, unedited candidate CVs (PDF) as received. Source material only — never share these directly with a client.
+- `New CVs/` — drop folder for new raw candidate CVs (PDF) to be formatted, plus a single batch text note (see Executive Summary rule below and Candidate Emails section) carrying both the Executive Summary for each candidate's Formatted CV and the client-email-only fields (Position, Company, Compensation, Note, Key Highlights). This is the active intake folder going forward.
+- `Sample CV/` — raw, unedited candidate CVs (PDF) from the initial batch. Historical/test material only — not the intake folder for new candidates, and never shared directly with a client.
 - `Formatted CVs/` — client-facing candidate CVs (`.docx`) rebuilt onto the HLS template, plus `HLS_CV_Template.docx`, the blank master to start any new candidate from.
 - `HLS_Bridge_Advisory_Pitch_Deck.pptx`, `HLS_Bridge_Advisory_Service_Agreement.docx` — existing branded collateral at the top level. The Service Agreement is the working precedent for page setup (A4, ~1in margins, centered header logo) since it was already produced with the font substitution below. The pitch deck's PowerPoint theme is the generic Office default (not the brand palette) — don't treat it as a color/font source.
 
@@ -111,12 +112,35 @@ Never recreate the mark from scratch, recolor it outside this palette, or round 
 
 Rules that apply to every candidate CV, not just the ones already done:
 - Strip all personal data: date of birth, home address, phone number, personal email, and status fields like nationality/religion/marital status/health/age.
-- Executive Summary is only written if the candidate's original CV had one — if it didn't, leave the section blank rather than fabricating content.
+- Executive Summary is authored by the user, not pulled from the original CV and never fabricated by the agent. For new candidates, the user drops a single batch text note in `New CVs/` (see Candidate Emails section for the full format) containing an `Executive Summary:` field per candidate. Match each entry to its candidate by name before filling the template. If a candidate has no entry in the batch note, leave the section blank rather than inferring one.
 - Condense dense/long originals (bullet lists, internal-only data, embedded screenshots) to a clean, quantified 1–3 pages; don't just re-paste everything into the new styling.
 
-There is no committed generator script for these files — they were built with a one-off `python-docx` script (photo pulled from the source PDF via `pymupdf`, since `poppler`/`pdftoppm` isn't installed on this machine) that lived outside this repo. Reproducing that approach (or opening `HLS_CV_Template.docx` directly in Word) is the way to produce a new one.
+`tools/extract_photo.py` and `tools/generate_cv.py` automate the mechanical parts of producing a new Formatted CV — see the Operating framework section and each script's `--help` for usage. They handle photo extraction and template-filling only; PII scrubbing, condensing, and executive-summary matching remain judgment calls made before building the candidate JSON fed to `generate_cv.py`.
+
+## Candidate Emails
+
+After a batch of Formatted CVs is done, candidates are shared with the client by email, bundled per client + open position (one email covers every candidate the client is being sent for that role — see `Position` on each candidate). The email is never auto-sent: a draft is created in Outlook for the user to attach the matching Formatted CV file(s) and send themselves.
+
+The batch text note dropped in `New CVs/` (any filename) drives both the CV and the email, split by field: `Executive Summary` feeds the Formatted CV; `Position`, `Company`, `Compensation`, `Note`, and `Key Highlights` are email-only and never appear in the CV docx. Format — one `=== CLIENT: ... ===` header per client/position, candidate blocks separated by a blank line, no blank lines within a candidate's own fields:
+
+```
+=== CLIENT: Client Contact Name <client@email.com> - Position: Marketing Manager ===
+
+Candidate Full Name
+Executive Summary: same text used in their Formatted CV...
+Position: Marketing Manager
+Company: target company name
+Compensation: 80,000 THB
+Note: Available to start within 30 days
+Key Highlights:
+- 5+ years in digital marketing
+- Led rebrand for X company
+
+=== END ===
+```
+
+`Executive Summary`, `Position`, and `Company` are required per candidate, plus at least one `Key Highlights` bullet; `Compensation`/`Note` are optional. `tools/build_email_drafts.py --note "New CVs/<file>"` parses the note and renders one HTML email body + a `manifest.json` (recipient, subject, candidate list) per client group into `.tmp/email_drafts/` — see `--help`. It does not touch a mailbox; the agent reads its output and creates the actual Outlook draft.
 
 ## Repo state note
 
-- Git was initialized recently and currently tracks `.DS_Store` files (top-level and inside `Brand CI update/`) — worth a `.gitignore` before the next commit if that wasn't intentional.
-- The WAT framework above references `workflows/`, `tools/`, `.env`, and `.tmp/` directories — none of these exist in this repo yet. Treat that section as the intended structure for any future automation added here, not a description of current contents.
+- `.gitignore` is in place. `tools/` now exists with `extract_photo.py`, `generate_cv.py`, and `build_email_drafts.py`. `workflows/` and `.env` still don't exist — treat those parts of the WAT framework section as intended structure, not current contents. `.tmp/` is created on demand by `build_email_drafts.py`.
