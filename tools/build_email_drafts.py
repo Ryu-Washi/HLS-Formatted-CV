@@ -198,27 +198,20 @@ def parse_batch_note(text):
 
 def render_candidate_table(c):
     # The Outlook draft/send tools strip every HTML attribute (no border=,
-    # no style=), so a real <table> renders with no visible gridlines. A
-    # framed, monospace <pre> table survives the sanitizer and reads as a
-    # bordered table in any client that respects <pre>.
-    headers = ["Candidate", "Position", "Company", "Compensation", "Note"]
-    values = [
-        c["full_name"],
-        c["position"],
-        c["company"],
-        c["compensation"] or "-",
-        c["note"] or "-",
+    # no style=), so a real <table> renders with no visible gridlines, and a
+    # <pre>-framed table (tried and rejected -- see workflows/candidate_email.md)
+    # reads as an odd monospace block against the rest of the message. A
+    # plain bold-labeled list survives the sanitizer and matches the rest
+    # of the email's formatting.
+    fields = [
+        ("Candidate", c["full_name"]),
+        ("Position", c["position"]),
+        ("Company", c["company"]),
+        ("Compensation", c["compensation"] or "-"),
+        ("Note", c["note"] or "-"),
     ]
-    widths = [max(len(h), len(v)) for h, v in zip(headers, values)]
-
-    def fmt_row(cells):
-        return " | ".join(cell.ljust(w) for cell, w in zip(cells, widths))
-
-    header_line = fmt_row(headers)
-    sep_line = "-+-".join("-" * w for w in widths)
-    data_line = fmt_row(values)
-    table_text = "\n".join([sep_line, header_line, sep_line, data_line, sep_line])
-    return f"<pre>{escape(table_text)}</pre>"
+    lines = [f"<strong>{label}:</strong> {escape(value)}" for label, value in fields]
+    return "<p>" + "<br>".join(lines) + "</p>"
 
 
 def render_group_html(group):
