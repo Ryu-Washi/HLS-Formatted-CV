@@ -196,6 +196,31 @@ def parse_batch_note(text):
     return groups
 
 
+def render_candidate_table(c):
+    # The Outlook draft/send tools strip every HTML attribute (no border=,
+    # no style=), so a real <table> renders with no visible gridlines. A
+    # framed, monospace <pre> table survives the sanitizer and reads as a
+    # bordered table in any client that respects <pre>.
+    headers = ["Candidate", "Position", "Company", "Compensation", "Note"]
+    values = [
+        c["full_name"],
+        c["position"],
+        c["company"],
+        c["compensation"] or "-",
+        c["note"] or "-",
+    ]
+    widths = [max(len(h), len(v)) for h, v in zip(headers, values)]
+
+    def fmt_row(cells):
+        return " | ".join(cell.ljust(w) for cell, w in zip(cells, widths))
+
+    header_line = fmt_row(headers)
+    sep_line = "-+-".join("-" * w for w in widths)
+    data_line = fmt_row(values)
+    table_text = "\n".join([sep_line, header_line, sep_line, data_line, sep_line])
+    return f"<pre>{escape(table_text)}</pre>"
+
+
 def render_group_html(group):
     candidates = group["candidates"]
     plural = "profile" if len(candidates) == 1 else "profiles"
@@ -208,20 +233,8 @@ def render_group_html(group):
 
     for idx, c in enumerate(candidates, start=1):
         parts.append(f"<p>{idx}. {escape(c['full_name'])}</p>")
-        parts.append(
-            "<table>"
-            "<tr><th>Candidate</th><th>Position</th><th>Company</th>"
-            "<th>Compensation</th><th>Note</th></tr>"
-            "<tr>"
-            f"<td>{escape(c['full_name'])}</td>"
-            f"<td>{escape(c['position'])}</td>"
-            f"<td>{escape(c['company'])}</td>"
-            f"<td>{escape(c['compensation'] or '-')}</td>"
-            f"<td>{escape(c['note'] or '-')}</td>"
-            "</tr>"
-            "</table>"
-        )
-        parts.append("<p><strong>Executive Summary</strong> (same as Formatted CV)</p>")
+        parts.append(render_candidate_table(c))
+        parts.append("<p><strong>Executive Summary</strong></p>")
         parts.append(f"<p>{escape(c['executive_summary'])}</p>")
         parts.append("<p><strong>Key highlights</strong></p>")
         parts.append(
