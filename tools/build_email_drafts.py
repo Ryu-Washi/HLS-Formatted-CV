@@ -204,7 +204,6 @@ def render_candidate_table(c):
     # plain bold-labeled list survives the sanitizer and matches the rest
     # of the email's formatting.
     fields = [
-        ("Candidate", c["full_name"]),
         ("Position", c["position"]),
         ("Company", c["company"]),
         ("Compensation", c["compensation"] or "-"),
@@ -220,22 +219,29 @@ def render_group_html(group):
     parts = [
         f"<p>Dear {escape(group['client_name'])},</p>",
         "<p>I hope this email finds you well.</p>",
-        f"<p>I would like to share you {len(candidates)} potential {plural} "
-        f"for your review. Please see as below;</p>",
+        f"<p>I would like to share with you {len(candidates)} potential {plural} "
+        f"for your review. Please find the details below.</p>",
     ]
 
     for idx, c in enumerate(candidates, start=1):
-        parts.append(f"<p>{idx}. {escape(c['full_name'])}</p>")
+        parts.append(f"<p><strong>{idx}. {escape(c['full_name'])}</strong></p>")
         parts.append(render_candidate_table(c))
         parts.append("<p><strong>Executive Summary</strong></p>")
         parts.append(f"<p>{escape(c['executive_summary'])}</p>")
-        parts.append("<p><strong>Key highlights</strong></p>")
+        parts.append("<p><strong>Key Highlights</strong></p>")
         parts.append(
             "<ul>" + "".join(f"<li>{escape(h)}</li>" for h in c["key_highlights"]) + "</ul>"
         )
 
-    parts.append("<p>If you have any questions regarding profiles. Please feel free to let me know.</p>")
-    parts.append("<p>Look forward to hearing from you soon</p>")
+    subject_pronoun = "This candidate brings" if len(candidates) == 1 else "These candidates bring"
+    subject_pronoun2 = "their profile" if len(candidates) == 1 else "their profiles"
+    parts.append(
+        f"<p>{subject_pronoun} a specialized skill set that is relatively uncommon in "
+        f"the market. Should {subject_pronoun2} be of interest, please let us know a "
+        f"convenient time and we will coordinate the interview arrangements promptly.</p>"
+    )
+    parts.append("<p>Should you have any questions regarding these profiles, please don't hesitate to reach out.</p>")
+    parts.append("<p>I look forward to hearing from you soon.</p>")
     parts.append("<p>Best regards,<br>Ryu</p>")
     return "\n".join(parts)
 
