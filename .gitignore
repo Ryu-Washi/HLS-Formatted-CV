@@ -5,3 +5,7 @@
 credentials.json
 token.json
 .claude/settings.local.json
+
+# Confidential candidate CVs - only the blank template may be committed
+Formatted CVs/*
+!Formatted CVs/HLS_CV_Template.docx
