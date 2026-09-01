@@ -10,6 +10,9 @@ token.json
 Formatted CVs/*
 !Formatted CVs/HLS_CV_Template.docx
 
+# Raw candidate intake (CV PDFs + batch notes) - confidential, never tracked
+New CVs/
+
 # Python bytecode
 __pycache__/
 *.pyc
