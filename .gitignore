@@ -9,3 +9,7 @@ token.json
 # Confidential candidate CVs - only the blank template may be committed
 Formatted CVs/*
 !Formatted CVs/HLS_CV_Template.docx
+
+# Python bytecode
+__pycache__/
+*.pyc
